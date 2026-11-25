@@ -191,6 +191,29 @@ def news_section():
     if last_err:
         raise last_err
     return None
+_rss_news = news_section
+
+
+def news_section():
+    if FINNHUB_KEY:
+        try:
+            r = requests.get(
+                "https://finnhub.io/api/v1/news",
+                params={"category": "general", "token": FINNHUB_KEY},
+                timeout=20,
+            )
+            r.raise_for_status()
+            lines = []
+            for n in r.json()[:6]:
+                title = (n.get("headline") or "").replace("[", "(").replace("]", ")")
+                link = n.get("url") or ""
+                if title and link:
+                    lines.append(f"\u2022 [{title[:110]}]({link})")
+            if lines:
+                return {"title": "\U0001F4F0 News to watch", "description": "\n".join(lines), "color": 0x9B59B6}
+        except Exception as e:
+            log_error(f"finnhub news: {e}")
+    return _rss_news()
 
 
 def main():
