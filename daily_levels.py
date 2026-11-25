@@ -37,7 +37,10 @@ SECTORS = {
 # FOMC decision days (second day of each meeting). Verify at federalreserve.gov.
 FOMC = ["2026-12-09", "2027-01-27", "2027-03-17"]
 # Add CPI, jobs report, etc. as "YYYY-MM-DD": "label"
-EXTRA_EVENTS = {}
+EXTRA_EVENTS = {"2026-11-25": "PCE inflation 8:30am ET",
+    "2026-11-26": "Market closed (Thanksgiving)",
+    "2026-11-27": "Early close 1pm ET"}
+
 # ---------------------------------------------------------------------------
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
