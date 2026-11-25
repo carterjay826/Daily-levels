@@ -161,19 +161,33 @@ def events_section(today):
     return {"title": "🏛️ FOMC & macro", "description": txt, "color": 0xE74C3C}
 
 
+NEWS_FEEDS = [
+    "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+    "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+    "https://finance.yahoo.com/news/rssindex",
+]
+
+
 def news_section():
-    r = requests.get("https://finance.yahoo.com/news/rssindex", headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    items = ET.fromstring(r.content).findall("./channel/item")[:6]
-    lines = []
-    for it in items:
-        title = (it.findtext("title") or "").replace("[", "(").replace("]", ")")
-        link = it.findtext("link") or ""
-        if title and link:
-            lines.append(f"• [{title[:110]}]({link})")
-    if not lines:
-        return None
-    return {"title": "📰 News to watch", "description": "\n".join(lines), "color": 0x9B59B6}
+    last_err = None
+    for url in NEWS_FEEDS:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            items = ET.fromstring(r.content).findall("./channel/item")[:6]
+            lines = []
+            for it in items:
+                title = (it.findtext("title") or "").replace("[", "(").replace("]", ")")
+                link = it.findtext("link") or ""
+                if title and link:
+                    lines.append(f"\u2022 [{title[:110]}]({link})")
+            if lines:
+                return {"title": "\U0001F4F0 News to watch", "description": "\n".join(lines), "color": 0x9B59B6}
+        except Exception as e:
+            last_err = e
+    if last_err:
+        raise last_err
+    return None
 
 
 def main():
@@ -203,6 +217,9 @@ def main():
         "content": f"**GM. Daily levels for {now.strftime('%a %b %d')}**",
         "embeds": embeds,
     }
+    if not DRY and not WEBHOOK.startswith("https://"):
+        log_error("DISCORD_WEBHOOK_URL is empty or not a full webhook URL. Check the DAILY_LEVELS_WEBHOOK secret name and value.")
+        sys.exit(1)
     if DRY:
         for e in embeds:
             print(f"\n=== {e['title']} ===\n{e['description']}")
